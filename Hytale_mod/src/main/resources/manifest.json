@@ -1,0 +1,7 @@
+{
+  "Id": "reverie-engine",
+  "Name": "Reverie Engine",
+  "Version": "1.0.0",
+  "Authors": ["Dreinale", "Thomas"],
+  "Main": "com.reverie.ReverieEnginePlugin"
+}

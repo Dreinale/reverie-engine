@@ -14,3 +14,7 @@ dist/
 *.egg-info/
 Pour_moi
 ai_brain/brain.json
+Hytale_mod/HytaleServer.jar
+Hytale_mod/target/
+*.class
+dependency-reduced-pom.xml
