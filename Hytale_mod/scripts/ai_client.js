@@ -3,6 +3,27 @@
  * Ce script connecte le jeu au cerveau IA Python via WebSocket
  */
 
+// --- DÉTECTION AUTOMATIQUE DE L'ENVIRONNEMENT ---
+// Charge la bibliothèque 'ws' si on est dans Node.js, sinon utilise le WebSocket natif (Hytale/Browser)
+let WebSocket;
+let isNodeEnvironment = false;
+
+if (typeof window === 'undefined' && typeof process !== 'undefined' && process.versions && process.versions.node) {
+    // Environnement Node.js (pour les tests)
+    isNodeEnvironment = true;
+    try {
+        WebSocket = require('ws');
+        console.log("🔧 Détection: Environnement Node.js - Utilisation de la bibliothèque 'ws'");
+    } catch (error) {
+        console.error("❌ Erreur: La bibliothèque 'ws' n'est pas installée. Exécutez: npm install ws");
+        process.exit(1);
+    }
+} else {
+    // Environnement navigateur ou Hytale (WebSocket natif)
+    WebSocket = globalThis.WebSocket || window.WebSocket;
+    console.log("🎮 Détection: Environnement Hytale/Browser - Utilisation du WebSocket natif");
+}
+
 // Configuration
 const AI_SERVER_URL = "ws://localhost:8765";
 const UPDATE_INTERVAL = 2000; // Envoi des données toutes les 2 secondes

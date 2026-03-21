@@ -94,7 +94,7 @@ Installe la librairie WebSocket pour Node.js (juste pour le test local) :
 npm install ws
 ```
 
-(Note : Assure-toi que la ligne `const WebSocket = require('ws');` est bien présente en haut de `ai_client.js` pour le test).
+⚠️ **Note** : Le script `ai_client.js` détecte automatiquement l'environnement (Node.js ou Hytale) et charge le bon WebSocket. Aucune modification nécessaire !
 
 Puis lance la simulation du PNJ :
 
