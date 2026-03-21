@@ -1,1 +1,16 @@
 ai_brain/venv/*
+.gitignore
+__pycache__/
+.claude
+node_modules/
+*.log
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+build/
+dist/
+*.egg-info/
+Pour_moi
+ai_brain/brain.json
