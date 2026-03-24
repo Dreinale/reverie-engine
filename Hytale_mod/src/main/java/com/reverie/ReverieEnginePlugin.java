@@ -1,12 +1,11 @@
 package com.reverie;
 
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.command.system.CommandRegistration;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
-import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.events.AllWorldsLoadedEvent;
 import com.reverie.arena.TrainingArena;
+import com.reverie.commands.SpawnAICommand;
 import com.reverie.websocket.AIBrainClient;
 
 import java.util.logging.Level;
@@ -25,13 +24,19 @@ public class ReverieEnginePlugin extends JavaPlugin {
     }
 
     @Override
+    protected void setup() {
+        getLogger().at(Level.INFO).log("🚀 Reverie Engine - Setup...");
+
+        // Enregistrer la commande /spawnai
+        getCommandRegistry().registerCommand(new SpawnAICommand(this));
+
+        getLogger().at(Level.INFO).log("✅ Commande /spawnai enregistrée !");
+    }
+
+    @Override
     protected void start() {
         getLogger().at(Level.INFO).log("🚀 Reverie Engine - Démarrage...");
-
-        // Enregistrer l'événement de chargement des mondes
-        getEventRegistry().register(AllWorldsLoadedEvent.class, this::onAllWorldsLoaded);
-
-        getLogger().at(Level.INFO).log("✅ Reverie Engine activé !");
+        getLogger().at(Level.INFO).log("✅ Reverie Engine activé ! Utilisez /spawnai pour créer l'arène d'entraînement.");
     }
 
     @Override
@@ -46,27 +51,16 @@ public class ReverieEnginePlugin extends JavaPlugin {
         getLogger().at(Level.INFO).log("✅ Reverie Engine désactivé !");
     }
 
-    /**
-     * Handler pour l'événement de chargement complet des mondes
-     */
-    private void onAllWorldsLoaded(AllWorldsLoadedEvent event) {
-        getLogger().at(Level.INFO).log("🌍 Tous les mondes sont chargés, initialisation de l'arène d'entraînement...");
+    // Getters et setters pour la commande
+    public AIBrainClient getAIBrainClient() {
+        return aiBrainClient;
+    }
 
-        // Récupérer le premier monde disponible
-        for (World world : Universe.get().getWorlds().values()) {
-            // Créer l'arène d'entraînement
-            trainingArena = new TrainingArena(world, getLogger());
-            trainingArena.build();
+    public void setAIBrainClient(AIBrainClient aiBrainClient) {
+        this.aiBrainClient = aiBrainClient;
+    }
 
-            // Initialiser la connexion au cerveau IA Python
-            aiBrainClient = new AIBrainClient("ws://localhost:8765", getLogger());
-            aiBrainClient.connect();
-
-            // Démarrer l'entraînement
-            trainingArena.startTraining(aiBrainClient);
-
-            // On utilise seulement le premier monde
-            break;
-        }
+    public void setTrainingArena(TrainingArena trainingArena) {
+        this.trainingArena = trainingArena;
     }
 }

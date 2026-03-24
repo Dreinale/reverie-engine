@@ -1,7 +1,8 @@
 {
-  "Id": "reverie-engine",
-  "Name": "Reverie Engine",
+  "Group": "com.reverie",
+  "Name": "reverie-engine",
   "Version": "1.0.0",
-  "Authors": ["Dreinale", "Thomas"],
-  "Main": "com.reverie.ReverieEnginePlugin"
+  "Main": "com.reverie.ReverieEnginePlugin",
+  "Id": "reverie-engine",
+  "ServerVersion": "2026.02.19-1a311a592"
 }

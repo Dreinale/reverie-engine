@@ -1,7 +1,8 @@
-🏗️ Architecture du Projet
+# 🏗️ Architecture du Projet
+
 Le projet est divisé en deux parties distinctes qui communiquent via WebSockets :
 
-Plaintext
+```text
 PROJET/
 ├── ai_brain/            # 🧠 LE CERVEAU (Backend Python)
 │   ├── venv/            # L'environnement virtuel (ignoré par Git)
@@ -51,9 +52,7 @@ pip install websockets numpy
 (Tu devrais voir un (venv) vert au début de ta ligne de commande).
 
 3. Configurer le Plugin Hytale (Java)
-L'API de Hytale est privée. Pour que le code compile, tu dois dire à Maven où se trouve le code du jeu sur ton PC.
-
-Ouvre un nouveau terminal et navigue dans le dossier du mod :
+L'API de Hytale est privée. Pour que le code compile, tu dois dire à Maven où se trouve le code du jeu sur ton PC. Ouvre un nouveau terminal et navigue dans le dossier du mod :
 
 Bash
 cd Hytale_mod
@@ -70,9 +69,24 @@ mvn clean package
 ✅ Attendu : Un fichier reverie-engine-1.0-SNAPSHOT.jar est généré dans le dossier Hytale_mod/target/.
 
 🚀 Étape 3 : Lancer la bête !
-Il te faudra deux terminaux ouverts.
+1. Activer le mod dans Hytale
+Le jeu désactive les mods par défaut. Il faut l'installer et l'autoriser :
 
-1. Allumer le Cerveau (Python)
+Copie le fichier reverie-engine-1.0-SNAPSHOT.jar dans le dossier des mods utilisateur : C:\Users\TON_NOM\AppData\Roaming\Hytale\UserData\Mods\
+
+Va dans le dossier de ta sauvegarde Hytale (ex: UserData\Saves\Dev\).
+
+Ouvre config.json et assure-toi que le mod est activé :
+
+JSON
+  "Mods": {
+    "com.reverie:reverie-engine": {
+      "Enabled": true
+    }
+  }
+Ouvre permissions.json et ajoute ton UUID de joueur dans le groupe "OP" pour avoir le droit d'exécuter les commandes du mod.
+
+2. Allumer le Cerveau (Python)
 Dans le terminal où ton (venv) est activé :
 
 Bash
@@ -80,18 +94,18 @@ cd ai_brain
 python server.py
 ✅ Attendu : 🧠 Le Cerveau IA est allumé et écoute sur ws://localhost:8765...
 
-2. Lancer Hytale
-Prends le fichier reverie-engine-1.0-SNAPSHOT.jar (généré à l'étape 2) et glisse-le dans le dossier plugins de ton serveur Hytale de développement.
+3. Exécuter l'IA en jeu
+Lance Hytale et connecte-toi à ton monde (ex: Default Flat).
 
-Lance ton serveur Hytale.
+Ouvre le chat avec Entrée.
 
-Lance le jeu et connecte-toi à ton monde.
+Tape la commande : /spawnai
 
 🎉 Résultat
-Dès que le monde sera chargé :
+Dès que la commande est lancée :
 
-Une arène d'entraînement va se construire automatiquement.
+Une arène d'entraînement va se construire à tes pieds.
 
-Un Kweebec (le PNJ test) va apparaître.
+Un PNJ IA va apparaître.
 
 Regarde la console Python : tu verras les données du PNJ arriver en temps réel et l'IA lui envoyer des ordres pour s'entraîner !

@@ -38,6 +38,7 @@ async def hytale_connection(websocket):
     print("🟢 Un client Hytale s'est connecté au Cerveau !")
     try:
         async for message in websocket:
+            print(f"DEBUG: Message brut reçu: {message}")
             game_data = json.loads(message)
             
             # 1. L'IA traduit les données brutes en "Concept" (ex: "healthy_hungry")
