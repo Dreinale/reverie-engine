@@ -25,33 +25,30 @@ public class ReverieEnginePlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
-        getLogger().at(Level.INFO).log("🚀 Reverie Engine - Setup...");
+        getLogger().at(Level.INFO).log("Reverie Engine - Setup...");
 
-        // Enregistrer la commande /spawnai
         getCommandRegistry().registerCommand(new SpawnAICommand(this));
 
-        getLogger().at(Level.INFO).log("✅ Commande /spawnai enregistrée !");
+        getLogger().at(Level.INFO).log("Commande /spawnai enregistrée !");
     }
 
     @Override
     protected void start() {
-        getLogger().at(Level.INFO).log("🚀 Reverie Engine - Démarrage...");
-        getLogger().at(Level.INFO).log("✅ Reverie Engine activé ! Utilisez /spawnai pour créer l'arène d'entraînement.");
+        getLogger().at(Level.INFO).log("Reverie Engine - Démarrage...");
+        getLogger().at(Level.INFO).log("Reverie Engine activé ! Utilisez /spawnai pour créer l'arène d'entraînement.");
     }
 
     @Override
     protected void shutdown() {
-        getLogger().at(Level.INFO).log("👋 Reverie Engine - Arrêt...");
+        getLogger().at(Level.INFO).log("Reverie Engine - Arrêt...");
 
-        // Déconnexion du cerveau IA
         if (aiBrainClient != null) {
             aiBrainClient.disconnect();
         }
 
-        getLogger().at(Level.INFO).log("✅ Reverie Engine désactivé !");
+        getLogger().at(Level.INFO).log("Reverie Engine désactivé !");
     }
 
-    // Getters et setters pour la commande
     public AIBrainClient getAIBrainClient() {
         return aiBrainClient;
     }

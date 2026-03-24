@@ -25,12 +25,12 @@ public class AIBrainClient extends WebSocketClient {
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
-        logger.at(Level.INFO).log("✅ Connecté au Cerveau IA sur " + getURI());
+        logger.at(Level.INFO).log("Connecté au Cerveau IA sur " + getURI());
     }
 
     @Override
     public void onMessage(String message) {
-        logger.at(Level.INFO).log("📥 Message reçu du Cerveau: " + message);
+        logger.at(Level.INFO).log("Message reçu du Cerveau: " + message);
 
         try {
             JsonObject response = JsonParser.parseString(message).getAsJsonObject();
@@ -38,41 +38,38 @@ public class AIBrainClient extends WebSocketClient {
             if (response.has("action")) {
                 String action = response.get("action").getAsString();
 
-                // Afficher le message si présent
                 if (response.has("message")) {
-                    logger.at(Level.INFO).log("💬 " + response.get("message").getAsString());
+                    logger.at(Level.INFO).log("Message: " + response.get("message").getAsString());
                 }
 
-                // Notifier le listener
                 if (actionListener != null) {
                     actionListener.accept(action);
                 }
             }
 
         } catch (Exception e) {
-            logger.at(Level.SEVERE).log("❌ Erreur lors du parsing de la réponse: " + e.getMessage());
+            logger.at(Level.SEVERE).log("Erreur lors du parsing de la réponse: " + e.getMessage());
         }
     }
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        logger.at(Level.WARNING).log("🔴 Déconnecté du Cerveau IA: " + reason);
+        logger.at(Level.WARNING).log("Déconnecté du Cerveau IA: " + reason);
 
-        // Tentative de reconnexion après 5 secondes
         new Thread(() -> {
             try {
                 Thread.sleep(5000);
-                logger.at(Level.INFO).log("🔄 Tentative de reconnexion...");
+                logger.at(Level.INFO).log("Tentative de reconnexion...");
                 reconnect();
             } catch (InterruptedException e) {
-                logger.at(Level.SEVERE).log("❌ Erreur lors de la reconnexion: " + e.getMessage());
+                logger.at(Level.SEVERE).log("Erreur lors de la reconnexion: " + e.getMessage());
             }
         }).start();
     }
 
     @Override
     public void onError(Exception ex) {
-        logger.at(Level.SEVERE).log("❌ Erreur WebSocket: " + ex.getMessage());
+        logger.at(Level.SEVERE).log("Erreur WebSocket: " + ex.getMessage());
     }
 
     /**
@@ -82,9 +79,9 @@ public class AIBrainClient extends WebSocketClient {
     public void sendData(String jsonData) {
         if (isOpen()) {
             send(jsonData);
-            logger.at(Level.FINE).log("📤 Données envoyées: " + jsonData);
+            logger.at(Level.FINE).log("Données envoyées: " + jsonData);
         } else {
-            logger.at(Level.WARNING).log("⚠️ WebSocket non connecté, impossible d'envoyer les données");
+            logger.at(Level.WARNING).log("WebSocket non connecté, impossible d'envoyer les données");
         }
     }
 
@@ -100,7 +97,7 @@ public class AIBrainClient extends WebSocketClient {
      * Ferme proprement la connexion
      */
     public void disconnect() {
-        logger.at(Level.INFO).log("🔌 Fermeture de la connexion au Cerveau IA...");
+        logger.at(Level.INFO).log("Fermeture de la connexion au Cerveau IA...");
         close();
     }
 }

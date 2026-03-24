@@ -28,7 +28,6 @@ public class SpawnAICommand extends AbstractPlayerCommand {
         super("spawnai", "Spawne l'arène d'entraînement IA à votre position");
         this.plugin = plugin;
 
-        // Donner accès à tous les modes de jeu (pas de permission requise)
         setPermissionGroups("default");
     }
 
@@ -39,24 +38,22 @@ public class SpawnAICommand extends AbstractPlayerCommand {
         plugin.getLogger().at(Level.INFO).log("🎮 Commande /spawnai exécutée");
 
         try {
-            // Récupérer la position du joueur
             TransformComponent playerTransform = store.getComponent(
                 playerEntityRef,
                 Objects.requireNonNull(TransformComponent.getComponentType())
             );
 
             if (playerTransform == null) {
-                context.sendMessage(Message.raw("❌ Impossible de récupérer votre position !"));
+                context.sendMessage(Message.raw("Impossible de récupérer votre position !"));
                 return;
             }
 
             Vector3d playerPos = playerTransform.getPosition();
 
             // Informer le joueur
-            context.sendMessage(Message.raw("🏗️ Construction de l'arène d'entraînement IA..."));
-            plugin.getLogger().at(Level.INFO).log("📍 Position du joueur: " + playerPos);
+            context.sendMessage(Message.raw("Construction de l'arène d'entraînement IA..."));
+            plugin.getLogger().at(Level.INFO).log("Position du joueur: " + playerPos);
 
-            // Initialiser le client WebSocket s'il n'existe pas encore
             if (plugin.getAIBrainClient() == null) {
                 context.sendMessage(Message.raw("🔌 Connexion au cerveau IA..."));
                 AIBrainClient aiClient = new AIBrainClient("ws://localhost:8765", plugin.getLogger());
@@ -64,20 +61,17 @@ public class SpawnAICommand extends AbstractPlayerCommand {
                 plugin.setAIBrainClient(aiClient);
             }
 
-            // Créer l'arène à la position du joueur
-            // IMPORTANT: build() va spawner le NPC et démarrer l'entraînement automatiquement
             TrainingArena arena = new TrainingArena(world, plugin.getLogger(), playerPos);
             plugin.setTrainingArena(arena);
 
-            // Construire l'arène et démarrer l'entraînement (tout se fait dans world.execute)
             arena.build(plugin.getAIBrainClient());
 
-            context.sendMessage(Message.raw("✅ Arène d'entraînement créée avec succès !"));
-            context.sendMessage(Message.raw("🤖 Le PNJ IA est maintenant connecté au cerveau Python."));
+            context.sendMessage(Message.raw("Arène d'entraînement créée avec succès !"));
+            context.sendMessage(Message.raw("Le PNJ IA est maintenant connecté au cerveau Python."));
 
         } catch (Exception e) {
-            plugin.getLogger().at(Level.SEVERE).log("❌ Erreur lors de l'exécution de /spawnai: " + e.getMessage());
-            context.sendMessage(Message.raw("❌ Erreur: " + e.getMessage()));
+            plugin.getLogger().at(Level.SEVERE).log("Erreur lors de l'exécution de /spawnai: " + e.getMessage());
+            context.sendMessage(Message.raw("Erreur: " + e.getMessage()));
             e.printStackTrace();
         }
     }
