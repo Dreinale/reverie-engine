@@ -1,32 +1,33 @@
 import asyncio
 import websockets
 import json
-from model import QLearningAgent # <-- On importe notre cerveau mathématique !
+from model import QLearningAgent 
 
-# On initialise notre agent IA avec les 3 actions possibles dans Hytale
-agent = QLearningAgent(actions=["jump", "move", "idle"])
-
-# Chargement de la mémoire sauvegardée (si elle existe)
+agent = QLearningAgent(actions=["Action_Wander", "Action_Turn", "Action_Eat", "Action_Sleep"])
 agent.load()
 
-# Variables globales pour mémoriser le tour précédent (Mémoire courte du PNJ)
 previous_state = None
 previous_action = None
 previous_data = None
 
-def calculate_reward(old_data, new_data):
-    """Calcule les points (+/-) en comparant l'ancien et le nouvel état du PNJ"""
+def calculate_reward(old_data, new_data, state, action):
+    """Calcule les points (+/-) avec les nouvelles règles"""
     if old_data is None:
         return 0
     
     reward = 0
-    # S'il a perdu de la vie, on le punit violemment
     if new_data["hp"] < old_data["hp"]:
         reward -= 10
-    # S'il a moins faim (donc il a réussi à manger), on le récompense grandement
-    elif new_data["hunger"] < old_data["hunger"]:
-        reward += 10
-    # Petite pénalité de temps pour l'inciter à agir et ne pas rester inactif
+        
+    elif new_data["hunger"] > old_data["hunger"]:
+        reward += 15 
+        
+    elif "blocked" in state and action == "Action_Wander":
+        reward -= 2 
+        
+    elif "blocked" in state and action == "Action_Turn":
+        reward += 5
+
     else:
         reward -= 0.1 
         
@@ -35,44 +36,35 @@ def calculate_reward(old_data, new_data):
 async def hytale_connection(websocket):
     global previous_state, previous_action, previous_data
     
-    print("🟢 Un client Hytale s'est connecté au Cerveau !")
+    print("🟢 Un client Hytale s'est connecté au Cerveau V3 (Vision & Murs) !")
     try:
         async for message in websocket:
-            print(f"DEBUG: Message brut reçu: {message}")
             game_data = json.loads(message)
             
-            # 1. L'IA traduit les données brutes en "Concept" (ex: "healthy_hungry")
             current_state = agent.get_state(game_data)
             
-            # 2. On calcule la récompense basée sur le tour précédent
-            reward = calculate_reward(previous_data, game_data)
+            # On passe aussi l'état et l'action précédente pour punir les murs
+            reward = calculate_reward(previous_data, game_data, previous_state, previous_action)
             
-            # 3. L'IA APPREND (mise à jour de la Q-Table)
             if previous_state is not None and previous_action is not None:
                 agent.learn(previous_state, previous_action, reward, current_state)
             
-            # 4. L'IA choisit sa prochaine action grâce aux maths
             action = agent.choose_action(current_state)
             
-            # 5. On sauvegarde la situation actuelle pour le prochain tour
             previous_state = current_state
             previous_action = action
             previous_data = game_data
             
-            # 6. On renvoie l'action au jeu
             response = {
                 "action": action, 
-                "message": f"État: {current_state} | Action choisie: {action}"
+                "message": f"État: {current_state} | Intention: {action}"
             }
             
             await websocket.send(json.dumps(response))
-            print(f"📤 Ordre envoyé : {action}\n")
             
     except websockets.exceptions.ConnectionClosed:
         print("🔴 Le client Hytale s'est déconnecté.")
-        # Sauvegarde automatique de la Q-Table à la déconnexion
         agent.save()
-        # On efface la mémoire courte à la déconnexion
         previous_state = previous_action = previous_data = None
 
 async def main():
@@ -81,4 +73,12 @@ async def main():
         await asyncio.Future()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        # On lance le serveur
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        # Quand tu fais Ctrl+C, ce bloc s'active !
+        print("\n🛑 Arrêt manuel demandé (Ctrl+C)...")
+        print("💾 Sauvegarde du cerveau en cours...")
+        agent.save()
+        print("👋 Serveur arrêté proprement. À bientôt !")

@@ -16,13 +16,23 @@ class QLearningAgent:
     def get_state(self, game_data):
         """
         Transforme les données brutes du jeu en un État simplifié pour la Q-Table.
+        Maintenant avec la VISION !
         """
         # On simplifie les HP (Vivant/Blessé) et la Faim (Plein/Affamé)
         hp_status = "healthy" if game_data.get("hp", 20) > 10 else "hurt"
         hunger_status = "full" if game_data.get("hunger", 10) > 5 else "hungry"
         
-        # On crée un état sous forme de string, ex: "healthy_hungry"
-        return f"{hp_status}_{hunger_status}"
+        # On analyse le radar (Vision)
+        surroundings = game_data.get("surroundings", {})
+        
+        # S'il y a un bloc différent de 0 (Air) autour de lui, il est près d'un mur
+        is_near_wall = "clear"
+        if surroundings.get("north", 0) != 0 or surroundings.get("south", 0) != 0 or \
+           surroundings.get("east", 0) != 0 or surroundings.get("west", 0) != 0:
+            is_near_wall = "blocked"
+            
+        # Le nouvel état mental de l'IA ressemble à ça : "healthy_hungry_clear" ou "hurt_full_blocked"
+        return f"{hp_status}_{hunger_status}_{is_near_wall}"
 
     def get_q_values(self, state):
         """

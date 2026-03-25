@@ -9,6 +9,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.npc.INonPlayerCharacter;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.NPCPlugin;
+import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import com.reverie.npc.AIControlledNPC;
 import com.reverie.websocket.AIBrainClient;
 
@@ -92,9 +93,9 @@ public class TrainingArena {
 
                 traineeNPC = new AIControlledNPC(npcRef, npc, store, world, logger);
 
-                logger.at(Level.INFO).log("PNJ spawné avec succès: " + npcRef.toString());
+                logger.at(Level.INFO).log("PNJ spawn avec succes (UUID: " + npcRef.toString() + ")");
             } else {
-                logger.at(Level.SEVERE).log("Échec du spawn du PNJ");
+                logger.at(Level.SEVERE).log("Echec spawn PNJ");
             }
 
         } catch (Exception e) {
