@@ -4,5 +4,6 @@
   "Version": "1.0.0",
   "Main": "com.reverie.ReverieEnginePlugin",
   "Id": "reverie-engine",
-  "ServerVersion": "2026.02.19-1a311a592"
+  "ServerVersion": "2026.02.19-1a311a592",
+  "IncludesAssetPack": true
 }

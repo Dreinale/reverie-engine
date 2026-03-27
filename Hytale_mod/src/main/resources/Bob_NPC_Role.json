@@ -1,0 +1,8 @@
+{
+    "Appearance": "Kweebec_AI_Trainee",
+    "Instructions": [],
+    "MaxHealth": 100,
+    "DefaultPlayerAttitude": "NEUTRAL",
+    "DefaultNPCAttitude": "NEUTRAL",
+    "MotionControllerList": []
+}

@@ -1,3 +1,8 @@
+***
+
+### 📝 2. Nouveau `Setup.md` (À copier-coller)
+
+```markdown
 # 🏗️ Architecture du Projet
 
 Le projet est divisé en deux parties distinctes qui communiquent via WebSockets :
@@ -12,20 +17,22 @@ PROJET/
 │
 └── Hytale_mod/          # 🎮 LE JEU (Plugin Hytale en Java)
     ├── pom.xml          # Configuration Maven et dépendances
-    └── src/main/java/   # Code source du plugin connecté à l'API Hytale
+    └── src/main/
+        ├── java/        # Code source du plugin connecté à l'API Hytale
+        └── resources/Server/NPC/Roles/
+                         # Contient Bob.json (Le PNJ lobotomisé intégré au mod)
+
+                         
 ⚙️ Étape 1 : Prérequis (Très Important)
 L'architecture repose sur 3 piliers. Installe-les dans cet ordre :
 
 Python 3.x : python.org/downloads
-
 ⚠️ CRUCIAL : Coche bien la case "Add python.exe to PATH" lors de l'installation.
 
 Java JDK 21 (Eclipse Adoptium) : adoptium.net
-
 ⚠️ CRUCIAL : Lors de l'installation, clique sur la croix rouge à côté de "Définir la variable JAVA_HOME" et choisis "Sera installé sur le disque dur local".
 
 Apache Maven : maven.apache.org
-
 Télécharge le .zip, extrais-le (ex: dans C:\maven), et ajoute le chemin du dossier bin (ex: C:\maven\bin) dans tes variables d'environnement Windows (Variable Path).
 
 (Redémarre ton PC ou ton terminal après ces installations).
@@ -66,17 +73,13 @@ Une fois que tu as un BUILD SUCCESS, compile notre mod :
 
 Bash
 mvn clean package
-✅ Attendu : Un fichier reverie-engine-1.0-SNAPSHOT.jar est généré dans le dossier Hytale_mod/target/.
+✅ Attendu : Le code compile, inclut automatiquement Bob.json dans les ressources, et génère reverie-engine-1.0-SNAPSHOT.jar dans le dossier Hytale_mod/target/.
 
 🚀 Étape 3 : Lancer la bête !
 1. Activer le mod dans Hytale
-Le jeu désactive les mods par défaut. Il faut l'installer et l'autoriser :
+Copie le fichier reverie-engine-1.0-SNAPSHOT.jar dans le dossier des mods de ta sauvegarde locale : C:\Users\TON_NOM\AppData\Roaming\Hytale\UserData\Saves\Dev\mods\
 
-Copie le fichier reverie-engine-1.0-SNAPSHOT.jar dans le dossier des mods utilisateur : C:\Users\TON_NOM\AppData\Roaming\Hytale\UserData\Mods\
-
-Va dans le dossier de ta sauvegarde Hytale (ex: UserData\Saves\Dev\).
-
-Ouvre config.json et assure-toi que le mod est activé :
+Ouvre le fichier config.json de ta sauvegarde (dans le dossier Dev\) et assure-toi que le mod est activé :
 
 JSON
   "Mods": {
@@ -95,17 +98,8 @@ python server.py
 ✅ Attendu : 🧠 Le Cerveau IA est allumé et écoute sur ws://localhost:8765...
 
 3. Exécuter l'IA en jeu
-Lance Hytale et connecte-toi à ton monde (ex: Default Flat).
+Lance Hytale et connecte-toi à ton monde "Dev".
 
 Ouvre le chat avec Entrée.
 
 Tape la commande : /spawnai
-
-🎉 Résultat
-Dès que la commande est lancée :
-
-Une arène d'entraînement va se construire à tes pieds.
-
-Un PNJ IA va apparaître.
-
-Regarde la console Python : tu verras les données du PNJ arriver en temps réel et l'IA lui envoyer des ordres pour s'entraîner !

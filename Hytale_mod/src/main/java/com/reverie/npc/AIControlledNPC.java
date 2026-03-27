@@ -6,6 +6,8 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.protocol.AnimationSlot;
+import com.hypixel.hytale.server.core.entity.AnimationUtils;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
 import com.hypixel.hytale.server.core.modules.entitystats.EntityStatValue;
@@ -13,12 +15,26 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.npc.INonPlayerCharacter;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.universe.world.accessor.BlockAccessor;
-import com.hypixel.hytale.server.npc.entities.NPCEntity;
-import com.hypixel.hytale.server.npc.role.support.StateSupport;
 
 import java.util.logging.Level;
 
+/**
+ * AIControlledNPC - Contrôle du PNJ marionnette par l'IA Python
+ *
+ * v4.0 : PNJ basé sur Test_Player_Hidden_Template (aucun State Machine).
+ *         Animations jouées directement via AnimationUtils.playAnimation().
+ */
 public class AIControlledNPC {
+
+    // =========================================================================
+    // ANIMATIONS — Noms des clips du modèle Kweebec
+    // =========================================================================
+    private static final String ANIM_WALK  = "Walk";
+    private static final String ANIM_EAT   = "Jump";
+    private static final String ANIM_SLEEP = "Sleep";
+    private static final String ANIM_JUMP  = "Jump";
+    private static final String ANIM_IDLE  = "Idle";
+    // =========================================================================
 
     private final Ref<EntityStore> npcRef;
     private final INonPlayerCharacter npc;
@@ -39,6 +55,9 @@ public class AIControlledNPC {
         this.entityId = "npc_" + npc.getNPCTypeId() + "_" + npcRef.toString();
     }
 
+    /**
+     * Collecte les données du PNJ pour les envoyer au cerveau IA Python
+     */
     public String collectData() {
         try {
             TransformComponent transform = store.getComponent(npcRef, TransformComponent.getComponentType());
@@ -52,7 +71,7 @@ public class AIControlledNPC {
                 if (healthStat != null) {
                     currentHP = healthStat.get();
                 } else {
-                    logger.at(Level.WARNING).log("Stat 'Health' non trouvee dans EntityStatMap");
+                    logger.at(Level.WARNING).log("Stat 'Health' non trouvée dans EntityStatMap");
                 }
             }
 
@@ -72,18 +91,9 @@ public class AIControlledNPC {
                     surroundings[1] = blockAccessor.getBlock(blockX, blockY, blockZ - 1);
                     surroundings[2] = blockAccessor.getBlock(blockX + 1, blockY, blockZ);
                     surroundings[3] = blockAccessor.getBlock(blockX - 1, blockY, blockZ);
-                } else {
-                    surroundings[0] = 0;
-                    surroundings[1] = 0;
-                    surroundings[2] = 0;
-                    surroundings[3] = 0;
                 }
             } catch (Exception e) {
                 logger.at(Level.WARNING).log("Impossible lire blocs environnants: " + e.getMessage());
-                surroundings[0] = 0;
-                surroundings[1] = 0;
-                surroundings[2] = 0;
-                surroundings[3] = 0;
             }
 
             JsonObject data = new JsonObject();
@@ -107,7 +117,7 @@ public class AIControlledNPC {
             return data.toString();
 
         } catch (Exception e) {
-            logger.at(Level.SEVERE).log("Erreur collecte donnees NPC: " + e.getMessage());
+            logger.at(Level.SEVERE).log("Erreur collecte données NPC: " + e.getMessage());
             e.printStackTrace();
 
             JsonObject fallback = new JsonObject();
@@ -120,67 +130,79 @@ public class AIControlledNPC {
         }
     }
 
+    /**
+     * Exécute une action reçue du cerveau IA Python.
+     * Comme le NPC est une "coquille vide" (Instructions: []),
+     * aucun behavior natif ne viendra écraser notre setState().
+     */
     public void performAction(String action) {
-        logger.at(Level.INFO).log("Execution action: " + action);
+        logger.at(Level.INFO).log("🎬 Action: " + action);
 
         try {
             switch (action) {
                 case "Action_Wander":
                     performWander();
                     break;
-
                 case "Action_Eat":
                     performEat();
                     break;
-
                 case "Action_Sleep":
                     performSleep();
                     break;
-
                 case "Action_Jump":
                     performJump();
                     break;
-
                 case "Action_Turn":
                     performTurn();
                     break;
-
                 default:
-                    logger.at(Level.WARNING).log("Action inconnue: " + action);
+                    logger.at(Level.WARNING).log("⚠️ Action inconnue: " + action);
                     break;
             }
-
         } catch (Exception e) {
-            logger.at(Level.SEVERE).log("Erreur execution action '" + action + "': " + e.getMessage());
+            logger.at(Level.SEVERE).log("❌ Erreur action '" + action + "': " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private void performWander() {
-        logger.at(Level.INFO).log("NPC wander (Action_Wander)");
-        logger.at(Level.INFO).log("Le NPC retourne a son comportement par defaut");
-    }
+    // =========================================================================
+    // MÉTHODE UTILITAIRE : Joue une animation directement via ModelComponent
+    // =========================================================================
 
-    private void performEat() {
-        logger.at(Level.INFO).log("NPC mange (Action_Eat)");
-        simulatedHunger = Math.min(100.0f, simulatedHunger + 30.0f);
-
+    /**
+     * Joue une animation sur le PNJ marionnette.
+     * Test_Player_Hidden_Template n'ayant pas de State Machine,
+     * on passe directement par ModelComponent.setAnimation().
+     *
+     * @param animName Nom du clip d'animation (ex: "Walk", "Eat", "Sleep")
+     */
+    private void playAnimation(String animName) {
         try {
-            NPCEntity npcEntity = store.getComponent(npcRef, NPCEntity.getComponentType());
-            if (npcEntity != null && npcEntity.getRole() != null) {
-                StateSupport stateSupport = npcEntity.getRole().getStateSupport();
-                stateSupport.setState(npcRef, "Kweebec_Sapling_Eat", "", store);
-                logger.at(Level.INFO).log("Etat 'Kweebec_Sapling_Eat' force (faim: " + simulatedHunger + ")");
-            } else {
-                logger.at(Level.WARNING).log("NPCEntity ou Role non trouve");
-            }
+            AnimationUtils.playAnimation(npcRef, AnimationSlot.Action, animName, store);
+            logger.at(Level.INFO).log("   → Animation: " + animName);
         } catch (Exception e) {
-            logger.at(Level.WARNING).log("Erreur performEat: " + e.getMessage());
+            logger.at(Level.WARNING).log("⚠️ Erreur playAnimation(" + animName + "): " + e.getMessage());
         }
     }
 
+    // =========================================================================
+    // ACTIONS INDIVIDUELLES
+    // =========================================================================
+
+    private void performWander() {
+        logger.at(Level.INFO).log("🚶 NPC marche (Action_Wander)");
+        playAnimation(ANIM_WALK);
+    }
+
+    private void performEat() {
+        logger.at(Level.INFO).log("🍽️ NPC mange (Action_Eat)");
+        simulatedHunger = Math.min(100.0f, simulatedHunger + 30.0f);
+        playAnimation(ANIM_EAT);
+        logger.at(Level.INFO).log("   → Faim: " + simulatedHunger);
+    }
+
     private void performSleep() {
-        logger.at(Level.INFO).log("NPC dort (Action_Sleep)");
+        logger.at(Level.INFO).log("💤 NPC dort (Action_Sleep)");
 
         try {
             EntityStatMap statMap = store.getComponent(npcRef, EntityStatMap.getComponentType());
@@ -189,46 +211,23 @@ public class AIControlledNPC {
                 if (healthStat != null) {
                     float newHP = Math.min(healthStat.get() + 20.0f, healthStat.getMax());
                     statMap.setStatValue(healthStat.getIndex(), newHP);
-                    logger.at(Level.INFO).log("Vie restauree: +20 HP (nouvelle valeur: " + newHP + ")");
+                    logger.at(Level.INFO).log("   → Vie restaurée: " + newHP + " HP");
                 }
             }
         } catch (Exception e) {
-            logger.at(Level.WARNING).log("Impossible restaurer vie: " + e.getMessage());
+            logger.at(Level.WARNING).log("⚠️ Impossible restaurer vie: " + e.getMessage());
         }
 
-        try {
-            NPCEntity npcEntity = store.getComponent(npcRef, NPCEntity.getComponentType());
-            if (npcEntity != null && npcEntity.getRole() != null) {
-                StateSupport stateSupport = npcEntity.getRole().getStateSupport();
-                stateSupport.setState(npcRef, "Kweebec_Sapling_Sleep", "", store);
-                logger.at(Level.INFO).log("Etat 'Kweebec_Sapling_Sleep' force");
-            } else {
-                logger.at(Level.WARNING).log("NPCEntity ou Role non trouve");
-            }
-        } catch (Exception e) {
-            logger.at(Level.WARNING).log("Erreur performSleep: " + e.getMessage());
-        }
+        playAnimation(ANIM_SLEEP);
     }
 
     private void performJump() {
-        logger.at(Level.INFO).log("NPC saute (Action_Jump)");
-
-        try {
-            NPCEntity npcEntity = store.getComponent(npcRef, NPCEntity.getComponentType());
-            if (npcEntity != null && npcEntity.getRole() != null) {
-                StateSupport stateSupport = npcEntity.getRole().getStateSupport();
-                stateSupport.setState(npcRef, "Kweebec_Sapling_Jump", "", store);
-                logger.at(Level.INFO).log("Etat 'Kweebec_Sapling_Jump' force");
-            } else {
-                logger.at(Level.WARNING).log("NPCEntity ou Role non trouve");
-            }
-        } catch (Exception e) {
-            logger.at(Level.WARNING).log("Erreur performJump: " + e.getMessage());
-        }
+        logger.at(Level.INFO).log("⬆️ NPC saute (Action_Jump)");
+        playAnimation(ANIM_JUMP);
     }
 
     private void performTurn() {
-        logger.at(Level.INFO).log("NPC tourne (Action_Turn)");
+        logger.at(Level.INFO).log("🔄 NPC tourne (Action_Turn)");
 
         try {
             TransformComponent transform = store.getComponent(npcRef, TransformComponent.getComponentType());
@@ -240,13 +239,13 @@ public class AIControlledNPC {
                 }
                 Vector3f newRotation = new Vector3f(newYaw, currentRotation.y, currentRotation.z);
                 transform.setRotation(newRotation);
-                logger.at(Level.INFO).log("Rotation modifiee: " + newRotation);
-            } else {
-                logger.at(Level.WARNING).log("TransformComponent non trouve");
+                logger.at(Level.INFO).log("   → Rotation: " + newRotation);
             }
         } catch (Exception e) {
-            logger.at(Level.WARNING).log("Erreur performTurn: " + e.getMessage());
+            logger.at(Level.WARNING).log("⚠️ Erreur rotation: " + e.getMessage());
         }
+
+        playAnimation(ANIM_WALK);
     }
 
     public String getEntityId() {
