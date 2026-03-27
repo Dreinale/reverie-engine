@@ -15,6 +15,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.npc.INonPlayerCharacter;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.universe.world.accessor.BlockAccessor;
+import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 
 import java.util.logging.Level;
 
@@ -114,6 +115,9 @@ public class AIControlledNPC {
             surroundingsJson.addProperty("west", surroundings[3]);
             data.add("surroundings", surroundingsJson);
 
+            String visionState = getVisionState();
+            data.addProperty("vision", visionState);
+
             return data.toString();
 
         } catch (Exception e) {
@@ -128,6 +132,93 @@ public class AIControlledNPC {
             fallback.add("surroundings", new JsonObject());
             return fallback.toString();
         }
+    }
+
+    /**
+     * Detecte l'environnement devant le NPC pour la navigation.
+     * Retourne "target" si bloc cible, "blocked" si mur, "hole" si trou, "clear" si libre.
+     */
+    private String getVisionState() {
+        try {
+            TransformComponent transform = store.getComponent(npcRef, TransformComponent.getComponentType());
+            if (transform == null) {
+                return "clear";
+            }
+
+            Vector3d position = transform.getPosition();
+            Vector3f rotation = transform.getRotation();
+
+            float yaw = rotation.x;
+            double radians = Math.toRadians(yaw);
+
+            double frontX = position.x + Math.sin(radians) * 1.0;
+            double frontZ = position.z + Math.cos(radians) * 1.0;
+
+            int blockX = (int) Math.floor(frontX);
+            int blockY = (int) Math.floor(position.y);
+            int blockZ = (int) Math.floor(frontZ);
+
+            long chunkPos = ((long)(blockX >> 4) << 32) | ((long)(blockZ >> 4) & 0xFFFFFFFFL);
+            BlockAccessor blockAccessor = world.getChunkIfLoaded(chunkPos);
+
+            if (blockAccessor == null) {
+                return "clear";
+            }
+
+            BlockType blockWall = blockAccessor.getBlockType(blockX, blockY + 1, blockZ);
+            if (blockWall != null && blockWall != BlockType.EMPTY) {
+                if (isTargetBlock(blockWall)) {
+                    logger.at(Level.INFO).log("Cible reperee: " + blockWall.getId());
+                    return "target";
+                }
+                return "blocked";
+            }
+
+            BlockType blockFloor = blockAccessor.getBlockType(blockX, blockY, blockZ);
+            if (blockFloor != null && blockFloor != BlockType.EMPTY) {
+                if (isTargetBlock(blockFloor)) {
+                    logger.at(Level.INFO).log("Cible reperee: " + blockFloor.getId());
+                    return "target";
+                }
+            }
+
+            if (blockFloor == null || blockFloor == BlockType.EMPTY) {
+                return "hole";
+            }
+
+            return "clear";
+
+        } catch (Exception e) {
+            logger.at(Level.WARNING).log("Erreur getVisionState: " + e.getMessage());
+            return "clear";
+        }
+    }
+
+    private boolean isTargetBlock(BlockType block) {
+        if (block == null) {
+            return false;
+        }
+
+        String blockId = block.getId();
+        String blockGroup = block.getGroup();
+
+        if (blockId.contains("Melon") || blockId.contains("melon")) {
+            return true;
+        }
+        if (blockId.contains("Pumpkin") || blockId.contains("pumpkin")) {
+            return true;
+        }
+        if (blockId.contains("Berry") || blockId.contains("berry")) {
+            return true;
+        }
+        if (blockGroup != null && blockGroup.equals("Food")) {
+            return true;
+        }
+        if (blockId.contains("Wood") && blockId.contains("Log")) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -190,8 +281,28 @@ public class AIControlledNPC {
     // =========================================================================
 
     private void performWander() {
-        logger.at(Level.INFO).log("🚶 NPC marche (Action_Wander)");
+        logger.at(Level.INFO).log("NPC marche (Action_Wander)");
         playAnimation(ANIM_WALK);
+
+        try {
+            TransformComponent transform = store.getComponent(npcRef, TransformComponent.getComponentType());
+            if (transform != null) {
+                Vector3d position = transform.getPosition();
+                Vector3f rotation = transform.getRotation();
+
+                float yaw = rotation.x;
+                double radians = Math.toRadians(yaw);
+
+                double newX = position.x + Math.sin(radians) * 0.5;
+                double newZ = position.z + Math.cos(radians) * 0.5;
+
+                Vector3d newPosition = new Vector3d(newX, position.y, newZ);
+                transform.setPosition(newPosition);
+                logger.at(Level.INFO).log("   -> Position: " + newX + ", " + newZ);
+            }
+        } catch (Exception e) {
+            logger.at(Level.WARNING).log("Erreur deplacement: " + e.getMessage());
+        }
     }
 
     private void performEat() {
