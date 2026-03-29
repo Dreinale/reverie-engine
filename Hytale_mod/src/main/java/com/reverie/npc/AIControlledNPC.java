@@ -16,6 +16,7 @@ import com.hypixel.hytale.server.core.universe.world.npc.INonPlayerCharacter;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.universe.world.accessor.BlockAccessor;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
+import com.hypixel.hytale.server.core.modules.physics.component.Velocity;
 
 import java.util.logging.Level;
 
@@ -284,6 +285,14 @@ public class AIControlledNPC {
         logger.at(Level.INFO).log("NPC marche (Action_Wander)");
         playAnimation(ANIM_WALK);
 
+        // 1. On vérifie la vision pour ne pas traverser les murs !
+        String vision = getVisionState();
+        if (vision.equals("blocked")) {
+            logger.at(Level.INFO).log(" 🚫 Mur détecté : Mouvement annulé (pour éviter de traverser le bloc).");
+            return; 
+        }
+
+        // 2. Si le chemin est libre, on fait avancer le corps "à la main"
         try {
             TransformComponent transform = store.getComponent(npcRef, TransformComponent.getComponentType());
             if (transform != null) {
@@ -293,12 +302,16 @@ public class AIControlledNPC {
                 float yaw = rotation.x;
                 double radians = Math.toRadians(yaw);
 
-                double newX = position.x + Math.sin(radians) * 0.5;
-                double newZ = position.z + Math.cos(radians) * 0.5;
+                // On le fait avancer d'un pas (0.5 bloc). C'est parfait pour le Q-Learning.
+                double speed = 1; 
+                double newX = position.x + Math.sin(radians) * speed;
+                double newZ = position.z + Math.cos(radians) * speed;
 
+                // Application de la nouvelle position absolue
                 Vector3d newPosition = new Vector3d(newX, position.y, newZ);
                 transform.setPosition(newPosition);
-                logger.at(Level.INFO).log("   -> Position: " + newX + ", " + newZ);
+                
+                logger.at(Level.INFO).log("   -> PNJ Téléporté manuellement vers: " + newX + ", " + newZ);
             }
         } catch (Exception e) {
             logger.at(Level.WARNING).log("Erreur deplacement: " + e.getMessage());
@@ -333,8 +346,20 @@ public class AIControlledNPC {
     }
 
     private void performJump() {
-        logger.at(Level.INFO).log("⬆️ NPC saute (Action_Jump)");
+        logger.at(Level.INFO).log("NPC saute (Action_Jump)");
         playAnimation(ANIM_JUMP);
+
+        try {
+            Velocity velocity = store.getComponent(npcRef, Velocity.getComponentType());
+            if (velocity != null) {
+                // Impulsion de saut vers le haut
+                double jumpForce = 8.0;
+                velocity.set(velocity.getX(), jumpForce, velocity.getZ());
+                logger.at(Level.INFO).log("   -> Jump velocity Y=" + jumpForce);
+            }
+        } catch (Exception e) {
+            logger.at(Level.WARNING).log("Erreur saut: " + e.getMessage());
+        }
     }
 
     private void performTurn() {
